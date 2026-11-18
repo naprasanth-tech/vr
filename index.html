@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#091a22">
+<title>Aautiverse | Fette VR Assembly Training</title>
+<meta name="description" content="Interactive Three.js WebXR rotary tablet press assembly prototype with real GLB machine and components, VR thumbstick walking and hand interaction">
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#081923;color:#ecf9f4;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+#scene{position:fixed;inset:0}canvas{display:block;touch-action:none;outline:0}#ui{position:fixed;inset:0;pointer-events:none}
+.top{position:absolute;top:18px;left:22px;right:22px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.brand{font-size:15px;font-weight:900;letter-spacing:.19em}.brand span{color:#7ef0c2}.subtitle{font-size:10px;letter-spacing:.14em;color:#a5c9bb;margin-top:5px}.chip{background:#102d37e8;border:1px solid #41666a;border-radius:26px;padding:9px 13px;font-size:11px;color:#b5e9d0}
+.panel{pointer-events:auto;position:absolute;top:98px;left:22px;width:305px;max-height:calc(100vh - 209px);overflow:auto;background:#0a2932e8;border:1px solid #38636a;border-radius:15px;backdrop-filter:blur(16px);padding:18px;box-shadow:0 15px 55px #0007}
+.overline{color:#88efbf;letter-spacing:.2em;font-size:10px;font-weight:800}.panel h1{font-size:21px;line-height:1.1;margin:9px 0 8px}.muted{color:#afc9c3;font-size:11px;line-height:1.55}.progress{display:flex;gap:5px;margin:14px 0 8px}.progress i{height:5px;flex:1;border-radius:10px;background:#42646a}.progress i.done{background:#83e8b9}
+.step{margin-top:12px;padding:13px;border-radius:10px;border:1px solid #437b70;background:#1a4445}.step b{color:#95f4c9;font-size:10px;letter-spacing:.12em}.step h2{font-size:16px;margin:6px 0}.step p{font-size:12px;color:#def4e9;margin:0;line-height:1.5}
+button{font:700 12px inherit;font-size:12px;cursor:pointer;border:1px solid #589788;background:#21434a;color:#effaf5;border-radius:9px;padding:11px 12px}button:hover{filter:brightness(1.13)}.mainbtn{background:#9af0c5;color:#082e27;border-color:#9af0c5}.full{display:block;width:100%;margin-top:10px}.divider{border-top:1px solid #375960;margin:16px 0}
+.assets{font-size:11px;line-height:1.75;color:#c4dbd5;white-space:pre-line}.loading{color:#b5f0cf}.error{color:#ffae9a}.success{color:#82efb9}
+.bottom{position:absolute;left:22px;right:22px;bottom:20px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}.controls{background:#0b2934df;border:1px solid #42636b;border-radius:11px;padding:13px 15px;max-width:650px;line-height:1.6;font-size:11px;color:#d9eee7}.controls b{color:#9cf4c9}.controls code{border:1px solid #71878a;border-radius:4px;padding:1px 5px;color:#fff;margin:0 2px}
+.vr{min-width:195px;pointer-events:auto;display:flex;flex-direction:column;gap:6px}.vr button{width:100%}#vrslot{width:100%}#vrslot button{position:relative!important;left:auto!important;bottom:auto!important;border:0!important;width:100%!important;height:43px!important;margin:0!important;background:#9af0c5!important;color:#072e27!important;border-radius:9px!important;font-weight:900!important;opacity:1!important}#vrslot a{color:#d7fff0!important}.vr small{color:#a5c6c3;font-size:10px;text-align:center;line-height:1.4}
+#toast{position:absolute;top:78px;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .25s;text-align:center;background:#133e44ef;border:1px solid #81cbb0;border-radius:9px;padding:11px 15px;font-size:12px;max-width:480px}#toast.show{opacity:1}
+#crosshair{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:12px;height:12px;border:1px solid #c2ffe1;border-radius:100%;box-shadow:0 0 12px #63fcb9}
+@media(max-width:780px){.top{left:10px;top:10px;right:10px}.panel{top:64px;left:10px;width:235px;padding:11px;max-height:calc(100vh - 154px)}.panel h1{font-size:17px}.bottom{bottom:10px;left:10px;right:10px}.controls{max-width:190px;font-size:9px;padding:9px}.vr{min-width:120px}.brand{font-size:12px}.chip{max-width:130px;font-size:9px}.step h2{font-size:13px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.181.0/examples/jsm/"}}</script>
+</head>
+<body><div id="scene"></div>
+<div id="ui">
+<div class="top"><div><div class="brand">AAUTI<span>VERSE</span> / VR LAB</div><div class="subtitle">REAL GLB MODELS · TRAINING PROTOTYPE</div></div><div class="chip" id="xrStatus">Checking headset support…</div></div>
+<div class="panel" id="panel"><div class="overline">FETTE MACHINE · V3</div><h1>Interactive tooling</h1><div class="muted">Machine and parts load directly from the connected GitHub repository. The work table is placed beside the machine for a short reach.</div>
+<div id="progress" class="progress"></div><div class="step"><b id="stage">STEP 1 / 6</b><h2 id="title">Insert die</h2><p id="info">Pick the die from the table and place it in the highlighted socket.</p></div>
+<button id="demo" class="mainbtn full">Complete current step (demo)</button>
+<button id="reset" class="full">↺ Restart assembly</button><div class="divider"></div><div class="overline">3D MODEL STATUS</div>
+<div class="assets" id="modelStatus">Loading GLB models…</div><div class="muted" style="margin-top:10px">This is an interaction prototype, not a validated industrial maintenance procedure. Mounting positions are approximate and require calibration against actual machine geometry.</div>
+</div>
+<div id="toast"></div><div id="crosshair"></div>
+<div class="bottom"><div class="controls"><b>DESKTOP</b> <code>W A S D</code> walk · mouse drag to look · click a part and highlighted fitting point · <code>E</code> interact.<br><b>VR HEADSET</b> Left thumbstick: move · Right thumbstick: snap-turn · Trigger/pinch: pick up part · Release near glowing fitting point to snap · Teleport with green floor pads.</div><div class="vr"><button id="lock">Mouse-lock walking</button><div id="vrslot"></div><small id="vrhelp">Immersive VR requires a compatible headset browser.</small></div></div></div>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {VRButton} from 'three/addons/webxr/VRButton.js';
+import {XRControllerModelFactory} from 'three/addons/webxr/XRControllerModelFactory.js';
+import {XRHandModelFactory} from 'three/addons/webxr/XRHandModelFactory.js';
+const $=id=>document.getElementById(id);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.7));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
+renderer.xr.enabled=true;renderer.xr.setReferenceSpaceType('local-floor');
+$('scene').append(renderer.domElement);const canvas=renderer.domElement;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x0b202b);scene.fog=new THREE.Fog(0x0b202b,14,29);
+const player=new THREE.Group();scene.add(player);
+const camera=new THREE.PerspectiveCamera(67,innerWidth/innerHeight,.05,100);
+camera.position.set(0,1.65,0);camera.rotation.order='YXZ';player.add(camera);
+player.position.set(.15,0,2.4);
+scene.add(new THREE.HemisphereLight(0xe5f2fd,0x3d4b44,2.7));
+const sun=new THREE.DirectionalLight(0xffefdb,3.1);sun.position.set(0,8,4);scene.add(sun);
+const workLight=new THREE.PointLight(0x8efbdc,35,7,2);workLight.position.set(0,3,-1.3);scene.add(workLight);
+const mat=(color,roughness=.68,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+const white=mat(0xe1e9e6),metal=mat(0x9eabb3,.36,.65),charcoal=mat(0x263d48,.44,.35),tabletop=mat(0x916c55,.75);
+function box(w,h,d,x,y,z,m,parent=scene){const a=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);a.position.set(x,y,z);parent.add(a);return a}
+function sphere(rad,x,y,z,m,parent=scene){const a=new THREE.Mesh(new THREE.SphereGeometry(rad,24,16),m);a.position.set(x,y,z);parent.add(a);return a}
+function cyl(rad,h,x,y,z,m,parent=scene){const a=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,h,32),m);a.position.set(x,y,z);parent.add(a);return a}
+function sign(text,x,y,z,scale=.8){const c=document.createElement('canvas');c.width=680;c.height=150;const g=c.getContext('2d');g.fillStyle='#102d39';g.fillRect(0,0,680,150);g.strokeStyle='#89daba';g.lineWidth=4;g.strokeRect(5,5,670,140);g.fillStyle='#eefef5';g.font='700 38px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(text,340,76,630);const tx=new THREE.CanvasTexture(c);tx.colorSpace=THREE.SRGBColorSpace;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tx}));s.position.set(x,y,z);s.scale.set(2.9*scale,.64*scale,1);scene.add(s);return {setText(v){g.clearRect(0,0,680,150);g.fillStyle='#102d39';g.fillRect(0,0,680,150);g.strokeStyle='#89daba';g.strokeRect(5,5,670,140);g.fillStyle='#eefef5';g.fillText(v,340,76,630);tx.needsUpdate=true}}}
+// Room
+box(11,.2,9,0,-.14,-1.2,mat(0x829193,.91));
+box(11,4,.2,0,2,-5.65,white);box(.2,4,9,-5.5,2,-1.2,white);box(.2,4,9,5.5,2,-1.2,white);
+for(let i=-4;i<=4;i+=2){box(1.6,.09,.42,i,3.9,-.8,white);const l=new THREE.PointLight(0xffffff,15,5);l.position.set(i,3.6,-.8);scene.add(l)}
+sign('AAUTIVERSE · ROTARY PRESS LAB',0,3.32,-5.48,1.1);
+const floatingInstructions=sign('STEP 1 · INSERT DIE',0,2.65,-4.6,.95);
+// Machine real asset at left, workbench to the right, ~0.5m gap
+const machineRoot=new THREE.Group();machineRoot.position.set(-1.15,0,-1.38);scene.add(machineRoot);
+const bench=new THREE.Group();bench.position.set(1.08,0,-.7);scene.add(bench);
+box(1.30,.09,1.00,0,.89,0,tabletop,bench);
+for(let x of [-.56,.56])for(let z of [-.41,.41])box(.065,.86,.065,x,.43,z,charcoal,bench);
+box(1.15,.045,.74,0,.25,0,metal,bench);
+sign('PARTS WORKBENCH',1.08,1.65,-1.34,.72);
+const loader=new GLTFLoader();
+const files={machine:'rotary_tablet_press_empty_turret.glb',die:'die.glb',punch:'punch.glb',screw:'socket_head_screw_M4x30.glb',allen:'tee_handle_allen_key_5mm.glb'};
+const assetStatus={};const socketOffsets=[
+ new THREE.Vector3(-1.16,1.28,-.76),new THREE.Vector3(-1.16,1.80,-.76),
+ new THREE.Vector3(-.89,1.47,-.69),new THREE.Vector3(-1.43,1.47,-.69),
+ new THREE.Vector3(-.89,1.47,-.69),new THREE.Vector3(-1.43,1.47,-.69)
+];
+const startPoints={
+ die:new THREE.Vector3(.64,1.06,-.90),
+ punch:new THREE.Vector3(1.02,1.11,-.94),
+ screw1:new THREE.Vector3(1.37,1.04,-.99),
+ screw2:new THREE.Vector3(1.40,1.04,-.50),
+ allen:new THREE.Vector3(.74,1.12,-.39)
+};
+const items={};const targets=[];const brightMat=new THREE.MeshBasicMaterial({color:0x7dfdc4,transparent:true,opacity:.17,depthTest:false,depthWrite:false});
+function hitProxy(parent,rad,name,kind){const mesh=sphere(rad,0,0,0,brightMat.clone(),parent);mesh.userData={id:name,kind};targets.push(mesh);return mesh}
+const pickupSizes={die:.19,punch:.40,screw:.14,allen:.44};
+for(const [name,p] of Object.entries(startPoints)){
+ const root=new THREE.Group();root.position.copy(p);scene.add(root);
+ const kind=name.startsWith('screw')?'screw':name;
+ const proxy=hitProxy(root,kind==='screw'?.13:.19,name,'part');
+ items[name]={root,kind,name,start:p.clone(),proxy,real:false};
+}
+// Fallback objects only appear if loading a model fails
+function fallback(kind,parent){const fallbackMat=mat(0x9eadb6,.33,.68);
+ if(kind==='die'){cyl(.085,.11,0,0,0,fallbackMat,parent);cyl(.036,.13,0,.04,0,charcoal,parent)}
+ if(kind==='punch'){cyl(.026,.35,0,0,0,fallbackMat,parent);cyl(.062,.06,0,.19,0,charcoal,parent)}
+ if(kind==='screw'){cyl(.016,.17,0,0,0,fallbackMat,parent);cyl(.042,.04,0,.10,0,charcoal,parent)}
+ if(kind==='allen'){cyl(.014,.34,0,0,0,fallbackMat,parent);const handle=cyl(.013,.31,0,.16,0,fallbackMat,parent);handle.rotation.z=Math.PI/2}
+}
+function normalizeGLB(sceneRoot,targetMax,ground=false){
+ sceneRoot.updateMatrixWorld(true);
+ const b=new THREE.Box3().setFromObject(sceneRoot),size=b.getSize(new THREE.Vector3());
+ const scale=targetMax/Math.max(size.x,size.y,size.z,.0001);sceneRoot.scale.multiplyScalar(scale);sceneRoot.updateMatrixWorld(true);
+ b.setFromObject(sceneRoot);const c=b.getCenter(new THREE.Vector3());
+ sceneRoot.position.x-=c.x;sceneRoot.position.z-=c.z;
+ sceneRoot.position.y-=ground?b.min.y:c.y;sceneRoot.updateMatrixWorld(true);
+ return b.getSize(new THREE.Vector3());
+}
+async function loadOne(key){const url='./'+encodeURIComponent(files[key]);try{
+ const gltf=await loader.loadAsync(url);const model=gltf.scene;
+ const target=key==='machine'?2.6:pickupSizes[key];const sz=normalizeGLB(model,target,key==='machine');
+ model.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false}});
+ if(key==='machine'){machineRoot.add(model)}
+ else {for(const part of Object.values(items))if(part.kind===key){const m=model.clone(true);part.root.add(m);part.real=true;const h=Math.max(.04,sz.y);part.root.position.y=.95+h*.5;part.start.copy(part.root.position)}}
+ assetStatus[key]='ready';updateStatus();
+}catch(e){assetStatus[key]='failed';console.error('GLB failed',key,e);
+ if(key==='machine'){box(1.9,1.85,1.35,0,1.15,0,metal,machineRoot);cyl(.65,.09,0,1.26,.4,charcoal,machineRoot)}
+ else for(const part of Object.values(items))if(part.kind===key)fallback(key,part.root);
+ updateStatus();}}
+function updateStatus(){$('modelStatus').innerHTML=Object.entries(files).map(([k,f])=>
+ '<div class="'+(assetStatus[k]==='ready'?'success':assetStatus[k]==='failed'?'error':'loading')+'">'+(assetStatus[k]==='ready'?'✓':assetStatus[k]==='failed'?'✕':'…')+' '+k+': '+(assetStatus[k]==='ready'?'real model loaded':assetStatus[k]==='failed'?'file load failed':'loading')+'</div>').join('')}
+updateStatus();
+Promise.all(Object.keys(files).map(loadOne)).then(()=>{const good=Object.values(assetStatus).filter(v=>v==='ready').length;toast('Loaded '+good+' of 5 GLB model types from GitHub');});
+// Training stage targets near the turret: intentionally illustrative until validated against actual machine tooling
+const steps=[
+ ['die','Insert die','Pick the die from the table, then select the highlighted opening.'],
+ ['punch','Insert punch','Pick the punch, then place it at the highlighted upper position.'],
+ ['screw1','Fit first screw','Pick screw one and place it in the first indicated fixing point.'],
+ ['screw2','Fit second screw','Pick screw two and place it in the second indicated fixing point.'],
+ ['allen','Tighten screw one','Pick the T-handle, then touch the highlighted screw-one point.'],
+ ['allen','Tighten screw two','Move the T-handle to the second highlighted screw point.']
+];
+let step=0,selected=null,held=[null,null],yaw=0,pitch=0,mouseDown=false,mouseMoved=false,lastMouseX=0,lastMouseY=0,mouseLocked=false,lastFrame=0,lastTurn=0;
+const ring=new THREE.Mesh(new THREE.TorusGeometry(.12,.013,10,40),new THREE.MeshBasicMaterial({color:0xaaffce,depthTest:false}));
+ring.rotation.x=-Math.PI/2;scene.add(ring);
+const glow=sphere(.135,0,0,0,new THREE.MeshBasicMaterial({color:0x58ffaa,transparent:true,opacity:.12,depthTest:false}));
+const socket=hitProxy(scene,.175,'socket','socket');
+const teleports=[];
+function pad(name,x,z){const base=cyl(.32,.025,x,.018,z,new THREE.MeshStandardMaterial({color:0x1dac8a,emissive:0x1a8067,emissiveIntensity:.48}));base.userData={id:name,kind:'teleport'};targets.push(base);const circle=new THREE.Mesh(new THREE.TorusGeometry(.37,.015,8,36),new THREE.MeshBasicMaterial({color:0x9bffcb}));circle.rotation.x=-Math.PI/2;circle.position.set(x,.06,z);scene.add(circle);teleports.push(circle)}
+pad('machine',-.85,.65);pad('table',1.15,.76);pad('overview',.2,2.6);
+let toastTimeout;function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>$('toast').classList.remove('show'),2700)}
+function showStage(){const finished=step>=steps.length;
+ $('progress').innerHTML=steps.map((s,i)=>'<i class="'+(i<step?'done':'')+'"></i>').join('');
+ $('stage').textContent=finished?'PROCEDURE COMPLETE':'STEP '+(step+1)+' / '+steps.length;
+ $('title').textContent=finished?'Assembly complete':steps[step][1];
+ $('info').textContent=finished?'Illustrative assembly finished. Restart to repeat.':steps[step][2];
+ ring.visible=glow.visible=socket.visible=!finished;
+ if(!finished){const p=socketOffsets[step];ring.position.copy(p);glow.position.copy(p);socket.position.copy(p);floatingInstructions.setText('STEP '+(step+1)+' · '+steps[step][1].toUpperCase());}
+ else floatingInstructions.setText('ASSEMBLY COMPLETE');
+}
+function finishStep(){if(step>=steps.length)return;
+ const [name]=steps[step];if(selected!==name){toast('Select '+name+' from the table first');return}
+ const item=items[name];
+ if(step<4){item.root.position.copy(socketOffsets[step]);}else {item.root.position.copy(item.start)}
+ selected=null;held=[null,null];step++;showStage();toast('Step complete');}
+function selectItem(name,controller=-1){if(step>=steps.length)return;if(name!==steps[step][0]){toast('Current step: '+steps[step][1]);return}selected=name;if(controller>=0)held[controller]=name;toast('Picked '+name+'. Place at the glowing target')}
+function reset(){step=0;selected=null;held=[null,null];for(const p of Object.values(items))p.root.position.copy(p.start);showStage();toast('Assembly reset')}
+$('reset').addEventListener('click',reset);$('demo').addEventListener('click',()=>{if(step>=steps.length){reset();return}selected=steps[step][0];finishStep()});
+function teleport(name){const p=name==='machine'?[-.95,1.05]:name==='table'?[1.1,1.1]:[.15,2.4];if(renderer.xr.isPresenting){const head=new THREE.Vector3();renderer.xr.getCamera().getWorldPosition(head);player.position.x+=p[0]-head.x;player.position.z+=p[1]-head.z}else{player.position.x=p[0];player.position.z=p[1]}toast('Moved to '+name)}
+function act(o,controller=-1){if(!o)return;const d=o.userData;if(d.kind==='part')selectItem(d.id,controller);if(d.kind==='socket')finishStep();if(d.kind==='teleport')teleport(d.id)}
+const ray=new THREE.Raycaster();const rayOrigin=new THREE.Vector3(),rayDir=new THREE.Vector3(),quat=new THREE.Quaternion(),tipPos=new THREE.Vector3(),side=new THREE.Vector3(),ahead=new THREE.Vector3();
+function intersect(origin,dir){ray.ray.origin.copy(origin);ray.ray.direction.copy(dir);return ray.intersectObjects(targets,false).find(h=>h.distance<6)?.object}
+function aimXR(controller){controller.getWorldPosition(rayOrigin);controller.getWorldQuaternion(quat);rayDir.set(0,0,-1).applyQuaternion(quat);return intersect(rayOrigin,rayDir)}
+function aimScreen(x=0,y=0){ray.setFromCamera(new THREE.Vector2(x,y),camera);return intersect(ray.ray.origin,ray.ray.direction)}
+const ctrl=[],hands=[],lastXRSelect=[false,false],xrGrips=[];
+const ctrlModel=new XRControllerModelFactory(),handModel=new XRHandModelFactory();
+function release(i){const name=held[i];if(!name)return;const obj=items[name];if(obj.root.position.distanceTo(socketOffsets[step])<.52)finishStep();else {obj.root.position.copy(obj.start);selected=null;toast('Move part nearer to the target and retry')}held[i]=null}
+for(let i=0;i<2;i++){
+ const c=renderer.xr.getController(i);player.add(c);ctrl.push(c);
+ const beam=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(0,0,-3)]),new THREE.LineBasicMaterial({color:0x88f7c9,transparent:true,opacity:.77}));c.add(beam);
+ c.addEventListener('selectstart',()=>act(aimXR(c),i));c.addEventListener('selectend',()=>release(i));
+ const grip=renderer.xr.getControllerGrip(i);player.add(grip);grip.add(ctrlModel.createControllerModel(grip));xrGrips.push(grip);
+ const hand=renderer.xr.getHand(i);player.add(hand);hand.add(handModel.createHandModel(hand,'spheres'));hands.push(hand);
+ hand.addEventListener('pinchstart',()=>{const joint=hand.joints?.['index-finger-tip'];if(!joint)return;joint.getWorldPosition(tipPos);let best=null,bestD=.4;for(const obj of targets){obj.getWorldPosition(rayOrigin);const d=tipPos.distanceTo(rayOrigin);if(d<bestD){best=obj;bestD=d}}act(best,i)});
+ hand.addEventListener('pinchend',()=>release(i));
+}
+function readStick(gamepad){if(!gamepad||!gamepad.axes)return [0,0];const a=gamepad.axes;const first=[a[0]||0,a[1]||0],last=a.length>=4?[a[2]||0,a[3]||0]:first;return Math.hypot(...last)>.13?last:first}
+function dead(x){return Math.abs(x)<.15?0:Math.sign(x)*(Math.abs(x)-.15)/.85}
+function xrMove(delta,now){
+ let left,right;const session=renderer.xr.getSession();if(!session)return;
+ for(const s of session.inputSources){if(!s.gamepad)continue;if(s.handedness==='left')left=s.gamepad;else if(s.handedness==='right')right=s.gamepad}
+ const [sx,sy]=readStick(left),[rx]=readStick(right),x=dead(sx),y=dead(sy);
+ renderer.xr.getCamera().getWorldDirection(ahead);ahead.y=0;if(ahead.lengthSq()<.0001)ahead.set(0,0,-1);ahead.normalize();
+ side.set(-ahead.z,0,ahead.x);
+ const stepMove=new THREE.Vector3().addScaledVector(ahead,-y).addScaledVector(side,x);
+ if(stepMove.lengthSq()>1)stepMove.normalize();player.position.addScaledVector(stepMove,delta*1.7);
+ if(Math.abs(rx)>.65 && now-lastTurn>370){
+ const angle=-Math.sign(rx)*Math.PI/6;
+ const head=new THREE.Vector3();renderer.xr.getCamera().getWorldPosition(head);
+ const offset=new THREE.Vector3(head.x-player.position.x,0,head.z-player.position.z).applyAxisAngle(new THREE.Vector3(0,1,0),angle);
+ player.rotation.y+=angle;player.position.x=head.x-offset.x;player.position.z=head.z-offset.z;lastTurn=now;
+ }
+ player.position.x=THREE.MathUtils.clamp(player.position.x,-4.7,4.7);player.position.z=THREE.MathUtils.clamp(player.position.z,-4.7,3.3);
+}
+function followHand(){for(let i=0;i<2;i++){const name=held[i];if(!name)continue;const o=items[name];const tip=hands[i].joints?.['index-finger-tip'];if(tip&&tip.visible){tip.getWorldPosition(tipPos);o.root.position.copy(tipPos)}else{ctrl[i].getWorldPosition(tipPos);ctrl[i].getWorldQuaternion(quat);tipPos.add(new THREE.Vector3(0,0,-.24).applyQuaternion(quat));o.root.position.copy(tipPos)}}}
+const keys={};addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE'&&!e.repeat)act(aimScreen());if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault()});addEventListener('keyup',e=>{keys[e.code]=false});
+canvas.addEventListener('pointerdown',e=>{mouseDown=true;mouseMoved=false;lastMouseX=e.clientX;lastMouseY=e.clientY;canvas.setPointerCapture?.(e.pointerId)});
+canvas.addEventListener('pointermove',e=>{if(!mouseDown||mouseLocked)return;const dx=e.clientX-lastMouseX,dy=e.clientY-lastMouseY;if(Math.abs(dx)+Math.abs(dy)>2)mouseMoved=true;yaw-=dx*.004;pitch=THREE.MathUtils.clamp(pitch-dy*.004,-1.25,1.25);lastMouseX=e.clientX;lastMouseY=e.clientY});
+canvas.addEventListener('pointerup',e=>{if(!mouseLocked&&!mouseMoved)act(aimScreen(e.clientX/innerWidth*2-1,1-e.clientY/innerHeight*2));mouseDown=false});
+canvas.addEventListener('click',()=>{if(mouseLocked)act(aimScreen())});
+document.addEventListener('mousemove',e=>{if(!mouseLocked)return;yaw-=e.movementX*.002;pitch=THREE.MathUtils.clamp(pitch-e.movementY*.002,-1.25,1.25)});
+$('lock').addEventListener('click',()=>{if(document.pointerLockElement===canvas)document.exitPointerLock();else canvas.requestPointerLock?.()});
+document.addEventListener('pointerlockchange',()=>{mouseLocked=document.pointerLockElement===canvas;$('crosshair').style.display=mouseLocked?'block':'none';$('lock').textContent=mouseLocked?'Exit mouse lock':'Mouse-lock walking'});
+function screenWalk(dt){camera.rotation.set(pitch,yaw,0,'YXZ');const f=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0),s=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);if(f||s){const scale=dt*1.9/Math.max(1,Math.hypot(f,s));player.position.x+=(-Math.sin(yaw)*f+Math.cos(yaw)*s)*scale;player.position.z+=(-Math.cos(yaw)*f-Math.sin(yaw)*s)*scale}player.position.x=THREE.MathUtils.clamp(player.position.x,-4.7,4.7);player.position.z=THREE.MathUtils.clamp(player.position.z,-4.7,3.3)}
+const vr=VRButton.createButton(renderer,{requiredFeatures:['local-floor'],optionalFeatures:['hand-tracking','bounded-floor']});
+$('vrslot').appendChild(vr);
+if(navigator.xr){navigator.xr.isSessionSupported('immersive-vr').then(ok=>{$('xrStatus').textContent=ok?'● WebXR VR ready':'Desktop preview · headset required';if(ok)$('vrhelp').textContent='Use left thumbstick to move and right to turn.'}).catch(()=>{$('xrStatus').textContent='WebXR detection unavailable'})}
+else $('xrStatus').textContent='Desktop preview';
+renderer.xr.addEventListener('sessionstart',()=>{toast('VR: LEFT stick move · RIGHT stick turn · trigger/pinch to pick');$('panel').style.display='none'});
+renderer.xr.addEventListener('sessionend',()=>{$('panel').style.display='block';held=[null,null];selected=null;toast('Exited VR')});
+let previous=0;renderer.setAnimationLoop(time=>{const dt=Math.min((time-previous)/1000,.06);previous=time;if(renderer.xr.isPresenting){xrMove(dt,time);followHand()}else screenWalk(dt);ring.scale.setScalar(1+.07*Math.sin(time*.003));glow.material.opacity=.12+.06*Math.sin(time*.005);teleports.forEach((t,i)=>t.rotation.z+=dt*.06);renderer.render(scene,camera)});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+showStage();toast('Loading real rotary press and tooling GLBs…');
+</script></body></html>
